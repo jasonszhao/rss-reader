@@ -34,6 +34,9 @@ async function fetch(feed) {
         throw Error(e);
       })
       .on("meta", meta => (result.meta = meta))
+      
+      // we use a normal function here, because we need to access `this`
+      // arrow functions don't provide a `this` binding
       .on("readable", function() {
         let article;
         while ((article = this.read())) {
