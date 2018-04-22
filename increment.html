@@ -1,0 +1,23 @@
+<title>Functional Reactive Programming with Flyd</title>
+<p> Open the console!</p>
+
+
+<div> 
+	<button onclick="actions(INCREMENT_X)">+</button>
+	<span id="x">0</span>
+	<button onclick="actions(DECREMENT_X)">-</button>
+</div>
+<div> 
+	<button onclick="actions(INCREMENT_Y)">+</button>
+	<span id="y">0</span>
+	<button onclick="actions(DECREMENT_Y)">-</button>
+</div>
+<div> 
+	Sum: <span id="sum">0</span>
+</div>
+
+<script src="https://unpkg.com/immer/dist/immer.umd.js"></script>
+<script src="http://cdn.jsdelivr.net/npm/ramda@0.25/dist/ramda.min.js"></script>
+<script src="https://cdn.rawgit.com/paldepind/flyd/34f59e12/flyd.min.js"></script>
+<script src="increment.js"></script>
+
