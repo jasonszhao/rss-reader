@@ -1,9 +1,7 @@
-"use strict";
-
 /******** App constants ******/
 const DEBUG = true
-const STORAGE_DB = 'state'
-const STORAGE_CHANNEL = 'channel'
+const STORAGE_DB = 'state-rss'
+const STORAGE_CHANNEL = 'channel-rss'
 
 
 /***** Some "functional" utilities ****/
@@ -20,31 +18,40 @@ const log = (...args) =>
 
 const uuid = () => (Math.random()+1).toString(36).slice(2) 
 
-//pure, actually functional utilities
-const add = R.curry((b, a) => a + b)
-const subtract = R.curry((b, a) => a - b)
-
-const add1 = add(1)
-const subtract1 = subtract(1)
-//////// END functional utilities
-
-// Model
+/***********
+ * Model
+ *********/
 const init = () => ({
-  x: 0,
-  y: 0,
+  sources: [
+    {
+      url: 'http://nautil.us/rss/all',
+      category: 'Science',
+      id: 'm4nfqca9oz'
+    },
+    {
+      url: 'https://www.theatlantic.com/feed/channel/business/',
+      category: 'Business',
+      id: 'gtie5vvssvl'
+    }
+  ],
+  cached_sources: {},
+  cached_articles: []
 })
 
+/**********************
+ * Actions 
+ **********************/
+
+const initial_actions = model => 
+    model.sources.map(source => request_feed(source.url))
 
 // Actions
+const REQUEST_FEED = 'request_feed'
+const REQUEST_FEED_RETURN = 'update_feed_cache'
 
-const initial_actions = model => []
-
-const INCREMENT_X = 'increment_x'
-const DECREMENT_X = 'decrement_x'
-const INCREMENT_Y = 'increment_y'
-const DECREMENT_Y = 'decrement_y'
-
-
+const ADD_FEED_SOURCE = 'add_feed_source'
+const REMOVE_FEED_SOURCE = 'remove_feed_source'
+const UPDATE_FEED_SOURCE = 'update_feed_source'
 
 // having unique identifiers not only helps with debugging, but is also
 // necessary for the `storage` event to register repeated actions.
@@ -62,49 +69,50 @@ const base_action = () => ({
     uuid: uuid()
 })
 
-const increment_x = () => ({
-  ...base_action(),
-  type: INCREMENT_X,
-  replicate: false,
+const request_feed = url => ({
+    ...base_action(),
+    type: REQUEST_FEED,
+    url,
+    replicate: false
 })
-const decrement_x = () => ({
-  ...base_action(),
-  type: DECREMENT_X,
-  replicate: false,
-})
-const increment_y = () => ({
-  ...base_action(),
-  type: INCREMENT_Y,
-  replicate: true,
-})
-const decrement_y = () => ({
-  ...base_action(),
-  type: DECREMENT_Y,
-  replicate: true,
+const request_feed_return = (url, status, data) => ({
+    ...base_action(),
+    type: REQUEST_FEED_RETURN,
+    url,
+    status,
+    data,
+    replicate: false
 })
 
+
+/* External actions */
+
+const server_parsed = url => 
+    axios.post('/api/rssparser', {url: url})
+        .then(res => res.data)
+
+/* END external actions */
 
 function update(action, model) {
-    switch (action.type) {
-        case INCREMENT_X:
-            return produce(model, d => {
-                d.x += 1
-            })
-        case DECREMENT_X:
-            return {
-                x: model.x - 1,
-                y: model.y
-            }
-        case INCREMENT_Y:
-            return {
-                ...model,
-                y: model.y + 1
-            }
-        case DECREMENT_Y:
-            return {
-                ...model,
-                y: model.y - 1
-            }
+    switch(action.type) {
+        case REQUEST_FEED: 
+            server_parsed(action.url)
+                .then(data => actions(request_feed_return(action.url, 200, data)))
+            return model
+
+        case REQUEST_FEED_RETURN:
+            if(action.status === 200) 
+                return produce(model, d => {
+                    d.cached_sources[uuid()] = action.data
+                })
+            else
+                return model
+
+        case ADD_FEED_SOURCE:
+        case REMOVE_FEED_SOURCE:
+        case UPDATE_FEED_SOURCE:
+            return model
+
         default:
             console.log('BAAD! action not matched!')
             console.log('action: ', action)
@@ -112,6 +120,7 @@ function update(action, model) {
             return model
     }
 }
+
 const restoreState = () => {
     const restored = JSON.parse(localStorage.getItem(STORAGE_DB))
     return restored === null ? init() : restored
@@ -121,27 +130,59 @@ const saveState = (model) => {
   localStorage.setItem(STORAGE_DB, JSON.stringify(model))
 }
 
+/***** View *******/
 
-// View
-const $x = document.getElementById('x')
-const $y = document.getElementById('y')
-const $sum = document.getElementById('sum')
+const ViewArticle = (model, source, article) => 
+  <article key={article.id}>
+    <h1>{article.title}</h1>
+    <div>
+      {source.meta.title } (<a href={article.permalink || article.link}>
+    {(new URI(article.permalink || article.link)).hostname()}
+      </a>) {
+    luxon.DateTime.fromISO(article.date).toLocaleString({ 
+      month: "short", year: "numeric", day: 'numeric'
+    })
+      }
+    </div>
+    <div>Summary</div>
+    <div class="summary" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.summary)}}></div>
+  </article>
+  
+const ViewMain = model => 
+  <main>
+  {
+    R.pipe
+      ( R.chain(source => source.articles.map(a => ({
+            view: ViewArticle(model, source, a),
+            data: a
+        })))
+      , R.sort( (a, b) => 
+          new Date(a.data.date) < new Date(b.data.date) ? 1 : -1)
+      , R.map(R.prop("view"))
 
-function render(model) {
-  $x.textContent = model.x
-  $y.textContent = model.y
-  $sum.textContent = model.x + model.y
+    ) (Object.values(model.cached_sources))
+  }
+  <p class="footer"> 
+    That's it for now. Take a deep breath and enjoy some fresh air outside.
+  </p>
+  </main>
 
-  $x.style.backgroundColor = `hsl(${model.x * 10 % 360}, 100%, 50%)`
-  $y.style.backgroundColor = `hsl(${model.y * 10 % 360}, 100%, 50%)`
-  $sum.style.backgroundColor = `hsl(${(model.x + model.y) * 10 % 360}, 100%, 50%)`
+function render (model) {
+  Inferno.render
+    ( ViewMain(model)
+    , document.querySelector('main')
+    )
 }
+
 
 // Streams
 const actions = flyd.stream()
 const saved_models = flyd.stream()
 
+
+
 const model = flyd.scan(R.flip(update), restoreState(), actions)
+
 actions
   .map(R.curryN(2, log)('action: '))
 

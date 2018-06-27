@@ -1,6 +1,7 @@
 const util = require("util");
 
 const express = require("express");
+const bodyParser = require('body-parser');
 const axios = require("axios");
 const FeedParser = require("feedparser");
 
@@ -46,11 +47,12 @@ async function fetch(feed) {
       .on("end", () => resolve(result));
   });
 }
-app.get(
-  "/api/rssparser",
+app.use(bodyParser.json());
 
-  (req, res) =>
-    fetch(req.query.url)
+const feed_endpoint = 
+  (req, res) => {
+    console.log(req.body.url);
+    fetch((req.query && req.query.url) ? req.query.url : req.body.url)
       .then(parsed => res.json(parsed))
       .catch(e => {
         console.log(e),
@@ -58,8 +60,13 @@ app.get(
             error: "Could not get or parse feed.",
             url: req.query.url
           });
-      })
-);
+      });
+  }
+app.get( "/api/rssparser", feed_endpoint);
+app.post( "/api/rssparser", feed_endpoint);
+
+app.use(express.static('./'))
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on localhost:${port}`));
+
