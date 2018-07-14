@@ -1,3 +1,18 @@
+import produce from 'immer'
+import * as Inferno from 'inferno'
+import flyd from 'flyd'
+import* as R from 'ramda'
+import axios from 'axios'
+import DOMPurify from 'dompurify'
+import luxon from 'luxon'
+import URI from 'urijs'
+
+import {forwardTo, filter} from './utils.js'
+
+/******* Some debugging tools *********/
+
+const reset_storage = () => localStorage.setItem(STORAGE_DB, JSON.stringify(init()))
+
 /******** App constants ******/
 const DEBUG = true
 const STORAGE_DB = 'state-rss'
@@ -5,7 +20,7 @@ const STORAGE_CHANNEL = 'channel-rss'
 
 
 /***** Some "functional" utilities ****/
-const produce = immer.default.bind(immer)
+//const produce = immer.default.bind(immer)
 
 //console.logs args and returns the last one
 //This can be a bottleneck if we're logging ~1000 items at once. 
@@ -22,16 +37,30 @@ const uuid = () => (Math.random()+1).toString(36).slice(2)
  * Model
  *********/
 const init = () => ({
+  source_categories: [
+    {
+      name: "Business",
+      id: '3224lkjjf3'
+    },
+    {
+      name: "Science",
+      id: '2kl34jsllksf'
+    },
+    {
+      name: "Uncategorized",
+      id: '32l342lkj'
+    }
+  ],
   sources: [
     {
       url: 'http://nautil.us/rss/all',
-      category: 'Science',
-      id: 'm4nfqca9oz'
+      category_id: '2kl34jsllksf', 
+      id: 'm4nfqca9oz',
     },
     {
       url: 'https://www.theatlantic.com/feed/channel/business/',
-      category: 'Business',
-      id: 'gtie5vvssvl'
+      category_id: '3224lkjjf3',
+      id: 'gtieivvssvl'
     }
   ],
   cached_sources: {},
@@ -52,6 +81,7 @@ const REQUEST_FEED_RETURN = 'update_feed_cache'
 const ADD_FEED_SOURCE = 'add_feed_source'
 const REMOVE_FEED_SOURCE = 'remove_feed_source'
 const UPDATE_FEED_SOURCE = 'update_feed_source'
+const REORDER_FEED_SOURCE = 'reorder_feed_source'
 
 // having unique identifiers not only helps with debugging, but is also
 // necessary for the `storage` event to register repeated actions.
@@ -84,6 +114,39 @@ const request_feed_return = (url, status, data) => ({
     replicate: false
 })
 
+const add_feed_source = (url, category_id) => ({
+  ...base_action(),
+  type: ADD_FEED_SOURCE,
+  source_id: uuid(),
+  url,
+  category_id: category_id || '32l342lkj',
+  replicate: true
+})
+
+const update_feed_source = (id, url, category_id) => ({
+  ...base_action(),
+  type: UPDATE_FEED_SOURCE,
+  source_id: id,
+  url,
+  category_id: category_id,
+  replicate: true
+})
+
+const remove_feed_source = id => ({
+  ...base_action(),
+  type: REMOVE_FEED_SOURCE,
+  source_id: id,
+  replicate: true
+})
+
+const reorder_feed_source = (source_id, place) => ({
+  ...base_action(),
+  type: REORDER_FEED_SOURCE,
+  source_id,
+  place,
+  replicate: true
+})
+
 
 /* External actions */
 
@@ -109,9 +172,61 @@ function update(action, model) {
                 return model
 
         case ADD_FEED_SOURCE:
+            return produce(model, d => {
+                d.sources.append({
+                    url: action.url,
+                    category_id: action.category_id,
+                    id: action.source_id
+                })
+            })
         case REMOVE_FEED_SOURCE:
+            return {
+                ...model,
+                sources: R.reject
+                    ( source => action.source_id === source.id
+                    , model.sources
+                    )
+            }
         case UPDATE_FEED_SOURCE:
-            return model
+            return {
+                ...model,
+                sources: model.sources.map(source =>
+                    source.id === action.source_id 
+                        ? {
+                            ...source, 
+                            url: action.url || source.url,
+                            category_id: action.category_id || source.category_id
+                        }
+                        : source
+                )
+            }
+        case REORDER_FEED_SOURCE:
+            //reorder a feed source within its category
+
+            return produce(model, d => {
+                 
+                const original_index = 
+                    d.sources.findIndex(s => s.id === action.source_id)
+
+                //remove the item from the sources list
+                const [source] = d.sources.splice(original_index, 1)
+
+                //iterate through the remaining list until we find the target_place
+                let target_place = 0
+                for (let i = 0; i < d.sources.length; i++) {
+                    if(d.sources[i].category_id === source.category_id)
+                        target_place++
+
+                    if(target_place === action.place) {
+                        d.sources.splice(i, 0, source)
+                        return
+                    }
+                }
+                //if the target place doesn't exist, put the source at the end 
+                // of the sources list
+                d.sources.push(source)
+            })
+              
 
         default:
             console.log('BAAD! action not matched!')
@@ -122,8 +237,13 @@ function update(action, model) {
 }
 
 const restoreState = () => {
-    const restored = JSON.parse(localStorage.getItem(STORAGE_DB))
-    return restored === null ? init() : restored
+    try {
+        const restored = JSON.parse(localStorage.getItem(STORAGE_DB))
+        return restored === null ? init() : restored
+    }
+    catch (e) {
+        return init()
+    }
 }
 const saveState = (model) => {
   console.log('saving model: ', model)
@@ -168,10 +288,10 @@ const ViewMain = model =>
   </main>
 
 function render (model) {
-  Inferno.render
-    ( ViewMain(model)
-    , document.querySelector('main')
-    )
+	Inferno.render
+        ( ViewMain(model)
+        , document.querySelector('main')
+        )
 }
 
 
@@ -190,7 +310,7 @@ initial_actions(model()).forEach(a => actions(a))
 
 model
   .map(R.curryN(2,log)('rendering with model: '))
-  .map(model => requestAnimationFrame(R.curryN(2, render)(model)))
+  .map(model => window.requestAnimationFrame(R.curryN(2, render)(model)))
 
 flyd.on
     ( model => (actions() && actions().replicate) ? saved_models(model) : null
@@ -262,4 +382,7 @@ flyd.on
   ( a => localStorage.setItem(STORAGE_CHANNEL, log('sending action: ', JSON.stringify(a)) ) 
   , outgoingExternalActions$
   )
+
+
+export default ({init, initial_actions, model, update, render, reorder_feed_source})
 

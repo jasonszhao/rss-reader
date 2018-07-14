@@ -1,5 +1,9 @@
 {   
-    "presets": [ "env"],
-    "plugins": ["babel-plugin-transform-object-rest-spread", ["babel-plugin-inferno", {"imports": false}]]
+    "presets": [ ["env", {"modules": false}]],
+    "plugins": [
+        "babel-plugin-transform-object-rest-spread", 
+        ["babel-plugin-inferno", {"imports": false}],
+        "external-helpers"
+    ]
 }
 

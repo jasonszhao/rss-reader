@@ -2,30 +2,6 @@
 <head>
   <link href="style.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="./node_modules/axios/dist/axios.js"></script>
-  <script src="./node_modules/ramda/dist/ramda.js"></script>
-  <script src="./node_modules/luxon/build/global/luxon.js"></script>
-  <script src="./node_modules/dompurify/dist/purify.min.js"></script>
-  <script src="./node_modules/urijs/src/URI.js"></script>
-  <script src="https://unpkg.com/immer/dist/immer.umd.js"></script>
-  <script src="https://cdn.rawgit.com/paldepind/flyd/34f59e12/flyd.min.js"></script>
-  <script>
-  // copy-pasted from 
-  // https://github.com/paldepind/flyd/blob/master/module/forwardto/index.js
-  const forwardTo = flyd.curryN(2, function(targ, fn) {
-      var s = flyd.stream();
-      flyd.map(function(v) { targ(fn(v)); }, s);
-      return s;
-  });
-
-  // copy-pasted from
-  // https://github.com/paldepind/flyd/blob/master/module/filter/index.js
-  const filter = flyd.curryN(2, function(fn, s) {
-      return flyd.combine(function(s, self) {
-	  if (fn(s())) self(s.val);
-      }, [s]);
-  });
-  </script>
 </head>
 <body>
 <header>
@@ -37,25 +13,7 @@
 </header>
 <main></main>
 
-  <!--<article>-->
-    <!--<h1> Zuckerberg's Congressional Hearing</h1>-->
-    <!--<div>Hacker News (news.ycombinator.com) Jun. 8, 2018</div>-->
-    <!--<div>Summary</div>-->
-    <!--<div>&lt;summary text&gt;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~ ~~~~~~-->
-      <!--~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~ ~~~~~~~~~~~~ ~~~ ~~~~~~~~-->
-    <!--</div>-->
-  <!--</article>-->
-  <!--<article>-->
-    <!--<h1> Why I need to write</h1>-->
-    <!--<div>Code Smoothie (codesmoothie.com)</div>-->
-    <!--<div>Summary</div>-->
-    <!--<div>&lt;summary text&gt;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~ ~~~~~~-->
-      <!--~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~ ~~~~~~~~~~~~ ~~~ ~~~~~~~~-->
-    <!--</div>-->
-  <!--</article>-->
+<script src="dist/reader.js"></script>
 
-
-<script src="./node_modules/inferno/dist/inferno.js"></script>
-<script src="reader.js"></script>
 </body>
 </html>

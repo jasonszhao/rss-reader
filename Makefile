@@ -1,7 +1,9 @@
 all: server js
 
 js: 
-	babel --source-maps --watch reader.jsx -o reader.js
+	rollup -c --watch --sourcemap
+
 server:
 	node server.js
+
 
