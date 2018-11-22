@@ -252,39 +252,50 @@ const saveState = (model) => {
 
 /***** View *******/
 
-const ViewArticle = (model, source, article) => 
-  <article key={article.id}>
-    <h1>{article.title}</h1>
+// adapted from https://stackoverflow.com/a/47140708/
+const strip_html = html => {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+}
+
+
+const ViewArticle = (model, source, article) => {
+  const link = article.permalink || article.link
+  const date = luxon.DateTime.fromISO(article.date).toLocaleString({ 
+        month: "short", year: "numeric", day: 'numeric'
+      })
+
+  return <article key={article.id}>
+    <h1>{ strip_html(article.title) }</h1>
     <div>
-      {source.meta.title } (<a href={article.permalink || article.link}>
-    {(new URI(article.permalink || article.link)).hostname()}
-      </a>) {
-    luxon.DateTime.fromISO(article.date).toLocaleString({ 
-      month: "short", year: "numeric", day: 'numeric'
-    })
-      }
+      { strip_html(source.meta.title) } 
+      {" "} (<a href={link}>{ (new URI(link)).hostname() }</a>) 
+      {" "} { date }
     </div>
     <div>Summary</div>
-    <div class="summary" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.summary)}}></div>
+    <div class="summary" 
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.summary)}}>
+    </div>
   </article>
+}
   
 const ViewMain = model => 
   <main>
-  {
-    R.pipe
-      ( R.chain(source => source.articles.map(a => ({
-            view: ViewArticle(model, source, a),
-            data: a
-        })))
-      , R.sort( (a, b) => 
-          new Date(a.data.date) < new Date(b.data.date) ? 1 : -1)
-      , R.map(R.prop("view"))
+    {
+      R.pipe
+        ( R.chain(source => source.articles.map(a => ({
+              view: ViewArticle(model, source, a),
+              data: a
+          })))
+        , R.sort( (a, b) => 
+            new Date(a.data.date) < new Date(b.data.date) ? 1 : -1)
+        , R.map(R.prop("view"))
 
-    ) (Object.values(model.cached_sources))
-  }
-  <p class="footer"> 
-    That's it for now. Take a deep breath and enjoy some fresh air outside.
-  </p>
+      ) (Object.values(model.cached_sources))
+    }
+    <p class="footer"> 
+      That's it for now. Take a deep breath and enjoy some fresh air outside.
+    </p>
   </main>
 
 function render (model) {

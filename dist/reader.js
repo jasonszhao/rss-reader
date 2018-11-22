@@ -506,6 +506,7 @@
       if (!isProxyable(baseState)) throw new Error("the first argument to an immer producer should be a primitive, plain object or array, got " + (typeof baseState === "undefined" ? "undefined" : _typeof(baseState)) + ": \"" + baseState + "\"");
       return getUseProxies() ? produceProxy(baseState, producer) : produceEs5(baseState, producer);
   }
+  //# sourceMappingURL=immer.module.js.map
 
   var NO_OP = '$NO_OP';
   var ERROR_MSG = 'a runtime error occured! Use Inferno in development environment to find the error.';
@@ -8940,7 +8941,7 @@
   return purify;
 
   })));
-
+  //# sourceMappingURL=purify.js.map
   });
 
   var luxon = createCommonjsModule(function (module, exports) {
@@ -15832,7 +15833,7 @@
   exports.IANAZone = IANAZone;
   exports.LocalZone = LocalZone;
   exports.Settings = Settings;
-
+  //# sourceMappingURL=luxon.js.map
   });
 
   var luxon$1 = unwrapExports(luxon);
@@ -19417,14 +19418,23 @@
 
   /***** View *******/
 
+  // adapted from https://stackoverflow.com/a/47140708/
+  var strip_html = function strip_html(html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      return doc.body.textContent || "";
+  };
+
   var createVNode$1 = createVNode,
       createTextVNode$1 = createTextVNode;
   var ViewArticle = function ViewArticle(model, source, article) {
-      return createVNode$1(1, 'article', null, [createVNode$1(1, 'h1', null, article.title, 0), createVNode$1(1, 'div', null, [source.meta.title, createTextVNode$1(' ('), createVNode$1(1, 'a', null, new URI(article.permalink || article.link).hostname(), 0, {
-          'href': article.permalink || article.link
-      }), createTextVNode$1(') '), luxon$1.DateTime.fromISO(article.date).toLocaleString({
+      var link = article.permalink || article.link;
+      var date = luxon$1.DateTime.fromISO(article.date).toLocaleString({
           month: "short", year: "numeric", day: 'numeric'
-      })], 0), createVNode$1(1, 'div', null, createTextVNode$1('Summary'), 2), createVNode$1(1, 'div', 'summary', null, 1, {
+      });
+
+      return createVNode$1(1, 'article', null, [createVNode$1(1, 'h1', null, strip_html(article.title), 0), createVNode$1(1, 'div', null, [strip_html(source.meta.title), createTextVNode$1(" "), createTextVNode$1(' ('), createVNode$1(1, 'a', null, new URI(link).hostname(), 0, {
+          'href': link
+      }), createTextVNode$1(')'), createTextVNode$1(" "), createTextVNode$1(' '), date], 0), createVNode$1(1, 'div', null, createTextVNode$1('Summary'), 2), createVNode$1(1, 'div', 'summary', null, 1, {
           'dangerouslySetInnerHTML': { __html: purify.sanitize(article.summary) }
       })], 4, null, article.id);
   };
