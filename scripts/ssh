@@ -1,0 +1,3 @@
+#!/bin/sh
+
+gcloud compute --project "rss-reader-rabbit" ssh --zone "us-east1-b" "instance-1" "$@"

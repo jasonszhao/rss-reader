@@ -1,0 +1,5 @@
+echo Current working directory is $(pwd)
+git fetch
+git reset --hard origin/master
+sudo systemctl restart rss-reader
+

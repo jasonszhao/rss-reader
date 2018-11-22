@@ -26,8 +26,8 @@ WantedBy=multi-user.target
 " >! /etc/systemd/system/rss-service.service
 
 sudo systemctl daemon-reload
-sudo systemctl enable rss-service.service
-sudo systemctl start rss-service
+sudo systemctl enable rss-reader.service
+sudo systemctl start rss-reader
 
 
 # port forwarding
@@ -36,4 +36,5 @@ sudo echo "post-down iptables-save > /etc/iptables.rules" >> /etc/network/interf
 
 sudo iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
 sudo iptables -t nat -I OUTPUT -p tcp -o lo --dport 80 -j REDIRECT --to-ports 3000
+
 
