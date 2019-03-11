@@ -1,4 +1,4 @@
 #!/bin/bash
 
-{ echo "cd rss-reader"; cat ./self-update; } | ./ssh
+{ echo "cd rss-reader"; cat ./scripts/self-update; } | ./scripts/ssh
 

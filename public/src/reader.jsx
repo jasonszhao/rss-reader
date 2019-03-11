@@ -1,13 +1,16 @@
 import produce from 'immer'
 import * as Inferno from 'inferno'
 import flyd from 'flyd'
-import* as R from 'ramda'
+import * as R from 'ramda'
 import axios from 'axios'
 import DOMPurify from 'dompurify'
 import luxon from 'luxon'
 import URI from 'urijs'
 
+import {  BrowserRouter, Route, Link, Switch } from 'inferno-router'
+
 import {forwardTo, filter} from './utils.js'
+import ViewEdit from './edit.jsx'
 
 /******* Some debugging tools *********/
 
@@ -279,7 +282,7 @@ const ViewArticle = (model, source, article) => {
   </article>
 }
   
-const ViewMain = model => 
+const ViewMain = ({model}) => 
   <main>
     {
       R.pipe
@@ -300,7 +303,12 @@ const ViewMain = model =>
 
 function render (model) {
 	Inferno.render
-        ( ViewMain(model)
+        ( <BrowserRouter>
+            <Switch>
+              <Route exact path="/" render={() => <ViewMain model={model}/>} />
+              <Route path="/edit/feeds" render={() => <ViewEdit model={model}/>} />          
+            </Switch>
+          </BrowserRouter>  
         , document.querySelector('main')
         )
 }
@@ -396,4 +404,3 @@ flyd.on
 
 
 export default ({init, initial_actions, model, update, render, reorder_feed_source})
-

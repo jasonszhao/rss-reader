@@ -1,11 +1,13 @@
-const util = require("util");
+const util = require("util")
+const path = require('path')
 
-const express = require("express");
-const bodyParser = require('body-parser');
+const express = require("express")
+const bodyParser = require('body-parser')
 const axios = require("axios");
-const FeedParser = require("feedparser");
+const FeedParser = require("feedparser")
 
-const app = express();
+
+const app = express()
 
 async function fetch(feed) {
   const res = await axios.get(feed, {
@@ -65,7 +67,8 @@ const feed_endpoint =
 app.get( "/api/rssparser", feed_endpoint);
 app.post( "/api/rssparser", feed_endpoint);
 
-app.use(express.static('./'))
+app.use(express.static('./public'))
+app.get('/edit/feeds', (req, res, next) => res.sendFile(path.join(__dirname, 'public/index.html')))
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on localhost:${port}`));
