@@ -1,10 +1,7 @@
-
-# ssh command:
-gcloud compute --project "rss-reader-rabbit" ssh --zone "us-east1-b" "instance-1"
-
-#####################
-# set up the server #
-#####################
+##################################
+# set up the server              #
+# (command to run on the server) #
+##################################
 
 git clone --depth=1 https://github.com/jasonszhao/rss-reader.git
 cd rss-reader
@@ -17,7 +14,7 @@ Description=runs the Node server for the RSS Reader app
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/npm start
 User=Jason
 WorkingDirectory=/home/Jason/rss-reader
 

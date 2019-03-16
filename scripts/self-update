@@ -1,5 +1,7 @@
 echo Current working directory is $(pwd)
 git fetch
 git reset --hard origin/master
+npm i
+npm run build
 sudo systemctl restart rss-reader
 
