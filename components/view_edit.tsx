@@ -1,6 +1,9 @@
-import * as Inferno from 'inferno'
+import flyd from 'flyd'
 
-const ViewEdit = ({model}) =>
+import {Action} from '../lib/action'
+import {Model} from '../lib/model'
+
+const ViewEdit: React.SFC<{model: Model, actions: flyd.Stream<Action>}> = ({model, actions}) =>
   <main>
     { model.source_categories.map(cat => 
         <article><h2>{cat.name}</h2>
@@ -11,5 +14,3 @@ const ViewEdit = ({model}) =>
     )}
   </main>
 export default ViewEdit
-
-// export default ({model}) => <p>hello</p>

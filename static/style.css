@@ -1,17 +1,17 @@
 @font-face {
     font-family: "Kollektif";
-    src: url("/kollektif/Kollektif.ttf"); }
+    src: url("./kollektif/Kollektif.ttf"); }
 @font-face {
     font-family: "Kollektif";
-    src: url("/kollektif/Kollektif-Bold.ttf");
+    src: url("./kollektif/Kollektif-Bold.ttf");
     font-weight: bold; }
 @font-face {
     font-family: "Kollektif";
-    src: url("/kollektif/Kollektif-Italic.ttf");
+    src: url("./kollektif/Kollektif-Italic.ttf");
     font-style: italic; }
 @font-face {
     font-family: "Kollektif";
-    src: url("/kollektif/Kollektif-BoldItalic.ttf");
+    src: url("./kollektif/Kollektif-BoldItalic.ttf");
     font-style: italic;
     font-weight: bold; }
 
@@ -24,8 +24,11 @@ body {
     margin: 0;
     background-color: #eee;
     padding-top: 2.75rem;
-
 }
+@media (max-width: 444px) {
+  body { padding-top: 3.75rem; }
+}
+
 header {
     position: fixed;
     top: 0;
@@ -33,12 +36,12 @@ header {
     right: 0;
     border-bottom: 1px solid #aaa;
     padding: 0.75rem 0.5rem;
-    /*background-color: #eee;*/
     background-color: #ceeca2;
     z-index: 2;
 
     display: flex;
 }
+
 header .logo { margin-right: auto}
 header .greeting {}
 header .right {margin-left: auto;}
@@ -66,21 +69,14 @@ main article h1 {
     font-size: 1.25rem;
 }
 
+main article .summary {
+  margin-top: 1rem;
+}
 main article .summary img {
-    /*text-align: center;*/
     display: block;
     margin: 0 auto;
-}
-/*main article .summary :not(img) {*/
-    /*text-align: left;*/
-    /*position: relative;*/
-    /*left: 0;*/
-/*}*/
 
-
-main article .summary img {
-    /*margin-left: auto;*/
-    /*margin-right: auto;*/
     max-width: 80%;
     max-height: 20em;
 }
+
