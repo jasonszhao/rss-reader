@@ -1,6 +1,9 @@
 /**
  * Connects an Action stream with an external Action communication channel.
- * So far, we only use localStorage.
+ * So far, we only use localStorage. 
+ * 
+ * This module can only be loaded in a browser context and will crash
+ * if window or localStorage are not defined!
  */
 
 import flyd from 'flyd'
@@ -13,7 +16,7 @@ import { log } from './utils'
 
 const STORAGE_CHANNEL = 'channel-rss'
 
-export class ExternalActionsDriver {
+export default class LocalStorageExternalActionsDriver {
   constructor(actions: flyd.Stream<Action>) {
 
     //if (and only if) `actions` volume gets too high, should we throttle saveState
@@ -59,30 +62,28 @@ export class ExternalActionsDriver {
   }
 
   private relayIncomingActionsTo(incomingExternalActions$: flyd.Stream<Action>) {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', e => {
-        if (e.key !== STORAGE_CHANNEL)
-          return
-        try {
-          const contents = JSON.parse(e.newValue || 'null')
-          console.log('event from channel: ', contents)
+    window.addEventListener('storage', e => {
+      if (e.key !== STORAGE_CHANNEL)
+        return
+      try {
+        const contents = JSON.parse(e.newValue || 'null')
+        console.log('event from channel: ', contents)
 
-          // "The StorageEvent is fired whenever a change is made to the Storage
-          // object (note that this event is not fired for sessionStorage changes).
-          // This won't work on the same page that is making the changes — it is
-          // really a way for other pages on the domain using the storage to sync any
-          // changes that are made."
-          //
-          // From https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
-          // (Accessed April 14, 2018)
+        // "The StorageEvent is fired whenever a change is made to the Storage
+        // object (note that this event is not fired for sessionStorage changes).
+        // This won't work on the same page that is making the changes — it is
+        // really a way for other pages on the domain using the storage to sync any
+        // changes that are made."
+        //
+        // From https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+        // (Accessed April 14, 2018)
 
-          contents.replicate = false
-          incomingExternalActions$(contents)
-        }
-        catch (e) {
-          console.error(e)
-        }
-      })
-    }
+        contents.replicate = false
+        incomingExternalActions$(contents)
+      }
+      catch (e) {
+        console.error(e)
+      }
+    })
   }
 }

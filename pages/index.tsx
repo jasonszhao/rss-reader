@@ -1,29 +1,39 @@
 import * as R from 'ramda'
+import filter from 'flyd/module/filter'
 import flyd from 'flyd'
 import Head from 'next/head'
 import React from 'react'
-import filter from 'flyd/module/filter'
 
 import { Action, request_feed, update, get_updater_with_actions} from '../lib/action'
-import { ExternalActionsDriver } from '../lib/external_action_driver'
-import { Model} from '../lib/model'
+import { Model, init } from '../lib/model'
+import LocalStorageExternalActionsDriver from '../lib/external_action_driver'
 import Persistence from '../lib/persistence'
 import ViewMain from '../components/view_main'
 
 class App extends React.Component {
   actions: flyd.Stream<Action> = flyd.stream()
-  externalActionsDriver = new ExternalActionsDriver(this.actions)
+  model: flyd.Stream<Model>
 
-  models_to_save: flyd.Stream<Model>
-  persistence = new Persistence(this.models_to_save)
-
-  model: flyd.Stream<Model> = flyd.scan(R.flip(update), this.persistence.restoreState(), this.actions)
-  state = this.model()
+  state: Model
 
   constructor(props: Readonly<{}>) {
     super(props)
 
-    this.models_to_save = filter(_ => this.actions() && this.actions().replicate, this.model)
+    if (typeof localStorage !== 'undefined') {
+      new LocalStorageExternalActionsDriver(this.actions)
+
+      // we have three references in a circle
+      const models_to_save: flyd.Stream<Model> = flyd.stream() 
+      const persistence = new Persistence(models_to_save)
+      this.model = flyd.scan(R.flip(update), persistence.restoreState(), this.actions)
+
+      const new_models_to_save = filter(_ => this.actions() && this.actions().replicate, this.model)
+      flyd.on(models_to_save as ((_: Model) => void), new_models_to_save)
+    } else {
+      this.model = flyd.scan(R.flip(update), init(), this.actions)
+    }
+    
+    this.state = this.model()
   }
   componentDidMount() {
     // rerender view on model change

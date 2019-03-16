@@ -190,4 +190,4 @@ export const get_updater_with_actions = (action: Action) => (actions: flyd.Strea
   }
 }
 
-export const update = R.uncurryN(2, get_updater)
+export const update: ((action: Action, model: Model) => Model) = R.uncurryN(2, get_updater)
