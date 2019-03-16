@@ -1,8 +1,5 @@
 import Parser from 'rss-parser'
 
-/***********
- * Model
- *********/
 interface SourceCategory {
   name: string
   id: string
@@ -37,7 +34,7 @@ export interface Model {
 }
 
 
-const init: () => Model = () => ({
+export const init: () => Model = () => ({
   source_categories: [
     {
       name: "Business",
@@ -67,5 +64,3 @@ const init: () => Model = () => ({
   cached_sources: {},
   cached_articles: []
 })
-
-export { init }

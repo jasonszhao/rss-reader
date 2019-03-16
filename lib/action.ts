@@ -120,7 +120,7 @@ const parser = new Parser({ customFields: { item: ['summary'] } })
 export const get_updater_with_actions = (action: Action) => (actions: flyd.Stream<Action>): Updater => {
   switch (action.type) {
     case REQUEST_FEED:
-      return produce(d => {
+      return produce(_ => {
         parser.parseURL("https://cors-anywhere.herokuapp.com/" + action.url)
             .then(data => actions(request_feed_return(action.url, 200, data)))
       })

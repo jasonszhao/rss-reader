@@ -1,4 +1,4 @@
-import {Model, init} from './model.ts'
+import { Model, init } from './model'
 import flyd from 'flyd'
 
 /******* Some debugging tools *********/
